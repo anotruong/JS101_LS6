@@ -1,133 +1,130 @@
 const readline = require('readline-sync');
-const positions = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-const winCombos = {
-  1: [1, 2, 3],
-  2: [4, 5, 6],
-  3: [7, 8, 9],
-  4: [1, 4, 7],
-  5: [2, 5, 8],
-  6: [3, 6, 9],
-  7: [1, 5, 9],
-  8: [3, 5, 7]
-};
+const COMP_MARKER = 'O';
+const INITIAL_MARKER = ' ';
+const PLAYER_MARKER = 'X';
 
-let compMoves = [];
 let compScore = 0;
-let playerMoves = [];
 let playerScore = 0;
 let restart = '';
 
 function prompt(msg) {
-  console.log(msg);
+  console.log('=>', msg);
 }
 
-function displayBoard(spot) {
+function displayBoard(board) {
+  console.clear();
+
   console.log('');
   console.log('     |     |');
-  console.log(`  ${spot['1']}  |  ${spot['2']}  |  ${spot['3']}`);
+  console.log(`  ${board['1']}  |  ${board['2']}  |  ${board['3']}`);
   console.log('     |     |');
   console.log('-----+-----+-----');
   console.log('     |     |');
-  console.log(`  ${spot['4']}  |  ${spot['5']}  |  ${spot['6']}`);
+  console.log(`  ${board['4']}  |  ${board['5']}  |  ${board['6']}`);
   console.log('     |     |');
   console.log('-----+-----+-----');
   console.log('     |     |');
-  console.log(`  ${spot['7']}  |  ${spot['8']}  |  ${spot['9']}`);
+  console.log(`  ${board['7']}  |  ${board['8']}  |  ${board['9']}`);
   console.log('     |     |');
   console.log('');
 }
 
 function initializeBoard() {
-  let obj = {
-    1: 1,
-    2: 2,
-    3: 3,
-    4: 4,
-    5: 5,
-    6: 6,
-    7: 7,
-    8: 8,
-    9: 9
-  };
+  let obj = {};
 
-  // for (let sqr = 0; sqr <= 9; sqr++) {
-  //       obj[String(sqr)] = ' ';
-  // }
+  for (let idx = 1; idx <= 9; idx++) {
+    obj[String(idx)] = INITIAL_MARKER;
+  }
   return obj;
 }
 
-function randomizer() {
-  let num = Math.floor(Math.random() * (9 - 1));
-  return num;
+function boardFull(board) {
+  return emptySquares(board).length === 0;
 }
 
-let board = initializeBoard();
+function comp(board) {
+  let randomIdx = Math.floor(Math.random() * emptySquares(board).length);
 
-function comp() {
-  let move = randomizer();
-  while (!playerMoves.includes(move) && !compMoves.includes(move)) {
-    compMoves.push(move);
-    board[String(move)] = 'O';
-  }
-  displayBoard(board);
+  let compSquare = emptySquares(board)[randomIdx];
+
+  prompt(`I'm going to play ${randomIdx}`);
+  prompt('Your turn!');
+  board[compSquare] = COMP_MARKER;
 }
 
-function player(num) {
-  if (!playerMoves.includes(num) && !compMoves.includes(num)) {
-    playerMoves.push(num);
-    board[String(num)] = 'X';
-  }
-  displayBoard(board);
+function emptySquares(board) {
+  return Object.keys(board).filter(key => board[key] === INITIAL_MARKER);
 }
 
-function resetting() {
-  prompt("Do you want to play again? (y/n?)");
-  restart = readline.question().toLowerCase();
+function player(board) {
+  let square;
 
-  while (restart[0] !== 'n' && restart[0] !== 'y') {
-    prompt('Please enter "y" or "n".');
-    restart = readline.question().toLowerCase();
+  while (true) {
+    prompt(`Please choose a square ${emptySquares(board).join(', ')}:`);
+    square = readline.question().trim();
+
+    if (emptySquares(board).includes(square)) break;
+
+    prompt("That's not a valid choice.");
   }
-  return restart;
+
+  board[square] = PLAYER_MARKER;
 }
 
-while (true) {
+function someoneWon(board) {
+  return !!detectWinner(board);
+}
 
-  prompt('Welcome player to the riveting game of TicTacToe!');
+function detectWinner(board) {
+  const winCombos = [
+    [1, 2, 3], [4, 5, 6], [7, 8, 9],
+    [1, 4, 7], [2, 5, 8], [3, 6, 9],
+    [1, 5, 9], [3, 5, 7]
+  ];
 
-  prompt('Your symbol will be X and I will be O.');
+  for (let line = 0; line < winCombos.length; line++) {
+    let [ sq1, sq2, sq3 ] = winCombos[line];
 
-  displayBoard(board);
-
-  prompt('Enter the number of the position you want to play');
-  let answer = readline.question();
-
-  while (!positions.includes(Number(answer))) {
-    prompt("That's not a valid choice, there are only 9 positions!");
-    answer = readline.question();
-  }
-
-  player(answer);
-
-  comp();
-
-  for (let i = 1; i <= 8; i++) {
-    if (winCombos[String(i)].every(num => playerMoves.includes(num))) {
-      playerScore++;
-      prompt('Congratulations, you won!');
-      prompt(`Player : ${playerScore} | Comp: ${compScore}`);
-      resetting();
-    } else if (winCombos[String(i)].every(num => compMoves.includes(num))) {
-      compScore++;
-      prompt('Aww shucks, looks like the computer won.');
-      prompt(`Player : ${playerScore} | Comp: ${compScore}`);
-      resetting();
-    } else if (Object.values(board).every(sym => sym === 'O' || sym === 'X')) {
-      prompt('Looks like no one won becaues it\'s a tie.');
-      resetting();
+    if (
+        board[sq1] === PLAYER_MARKER &&
+        board[sq2] === PLAYER_MARKER &&
+        board[sq3] === PLAYER_MARKER
+    ) {
+      return 'Player';
+    } else if (
+        board[sq1] === COMP_MARKER &&
+        board[sq2] === COMP_MARKER &&
+        board[sq3] === COMP_MARKER
+    ) {
+      return 'Computer';
     }
   }
 
-  if (restart[0] !== 'y') break;
+  return null;
 }
 
+
+let board = initializeBoard();
+
+prompt('Welcome player to the riveting game of TicTacToe!');
+prompt('Your symbol will be X and I will be O.');
+
+displayBoard(board);
+
+//start of the game:
+
+while (true) {
+
+  player(board);
+  displayBoard(board);
+  comp(board);
+  displayBoard(board);
+
+  if (someoneWon(board) || boardFull(board)) break;
+}
+
+if (someoneWon(board)) {
+  prompt(`${detectWinner(board)} won!`)
+} else {
+  prompt('It\'s a tie!')
+}

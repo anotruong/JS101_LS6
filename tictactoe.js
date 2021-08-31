@@ -14,6 +14,7 @@ function prompt(msg) {
 function displayBoard(board) {
   console.clear();
 
+  prompt('Your symbol will be X and I will be O.');
   console.log('');
   console.log('     |     |');
   console.log(`  ${board['1']}  |  ${board['2']}  |  ${board['3']}`);
@@ -103,28 +104,33 @@ function detectWinner(board) {
   return null;
 }
 
-
+while (true) {
 let board = initializeBoard();
 
 prompt('Welcome player to the riveting game of TicTacToe!');
-prompt('Your symbol will be X and I will be O.');
 
-displayBoard(board);
+  while (true) {
+    displayBoard(board);
 
-//start of the game:
+    player(board);
+    if (someoneWon(board) || boardFull(board)) break;
 
-while (true) {
+    comp(board);
+    displayBoard(board);
+    if (someoneWon(board) || boardFull(board)) break;
+  }
 
-  player(board);
-  displayBoard(board);
-  comp(board);
-  displayBoard(board);
+  displayBoard(board)
 
-  if (someoneWon(board) || boardFull(board)) break;
+  if (someoneWon(board)) {
+    prompt(`${detectWinner(board)} won!`)
+  } else {
+    prompt('It\'s a tie!')
+  }
+
+  prompt(`Would you like to play again? y/n`);
+  let answer = readline.question().toLowerCase();
+  if (answer !== 'y') break;
 }
 
-if (someoneWon(board)) {
-  prompt(`${detectWinner(board)} won!`)
-} else {
-  prompt('It\'s a tie!')
-}
+prompt('Thanks for playing Tic Tac Toe~');

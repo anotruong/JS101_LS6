@@ -3,9 +3,9 @@ const COMP_MARKER = 'O';
 const INITIAL_MARKER = ' ';
 const PLAYER_MARKER = 'X';
 const winCombos = [
-    [1, 2, 3], [4, 5, 6], [7, 8, 9],
-    [1, 4, 7], [2, 5, 8], [3, 6, 9],
-    [1, 5, 9], [3, 5, 7]
+  [1, 2, 3], [4, 5, 6], [7, 8, 9],
+  [1, 4, 7], [2, 5, 8], [3, 6, 9],
+  [1, 5, 9], [3, 5, 7]
 ];
 
 
@@ -49,27 +49,40 @@ function boardFull(board) {
   return emptySquares(board).length === 0;
 }
 
-function defensiveManuever (line, board) {
+function clearBoard(board) {
+  Object.keys(board).map(key => {
+    return board[key] = INITIAL_MARKER;
+  });
+}
+
+function findAtRiskSquare (line, board, marker) {
   let markersInLine = line.map(square => board[square]);
 
-  if (markersInLine.filter(mark => mark === PLAYER_MARKER).length === 2) {
-    let unusedSquare = line.find(square => board[square] === INITIAL_MARKER);
+  if (markersInLine.filter(mark => mark === marker).length === 2) {
+  let unusedSquare = line.find(square => board[square] === INITIAL_MARKER);
 
     if (unusedSquare !== undefined) {
       return unusedSquare;
-      }
+    }
   }
-
   return null;
 }
 
 function comp(board) {
-  let square
+  let square;
 
   for (let idx = 0; idx < winCombos.length; idx++) {
     let line = winCombos[idx];
-    square = defensiveManuever(line, board);
+    square = findAtRiskSquare(line, board, COMP_MARKER);
     if (square) break;
+  }
+
+  if (!square) {
+  for (let idx = 0; idx < winCombos.length; idx++) {
+    let line = winCombos[idx];
+    square = findAtRiskSquare(line, board, PLAYER_MARKER);
+    if (square) break;
+   }
   }
 
   if (!square) {
@@ -77,7 +90,7 @@ function comp(board) {
     square = emptySquares(board)[randomIdx];
   }
 
-  board[compSquare] = COMP_MARKER;
+  board[square] = COMP_MARKER;
 }
 
 function emptySquares(board) {
@@ -121,13 +134,13 @@ function detectWinner(board) {
     let [ sq1, sq2, sq3 ] = winCombos[line];
 
     if (
-        board[sq1] === PLAYER_MARKER &&
+      board[sq1] === PLAYER_MARKER &&
         board[sq2] === PLAYER_MARKER &&
         board[sq3] === PLAYER_MARKER
     ) {
       return 'Player';
     } else if (
-        board[sq1] === COMP_MARKER &&
+      board[sq1] === COMP_MARKER &&
         board[sq2] === COMP_MARKER &&
         board[sq3] === COMP_MARKER
     ) {
@@ -141,11 +154,18 @@ function detectWinner(board) {
 function pointScorer(board) {
   if (detectWinner(board) === 'Player') {
     playerScore += 1;
-    Object.keys(board).map(key => {
-    return board[key] = INITIAL_MARKER;
-    });
+    clearBoard(board);
   } else {
     compScore += 1;
+    clearBoard(board);
+  }
+}
+
+function winOrFull(board) {
+  if (someoneWon(board)) {
+    pointScorer(board);
+  } else if (boardFull(board)) {
+    clearBoard(board);
   }
 }
 
@@ -156,32 +176,31 @@ while (true) {
 
   while (true) {
 
-      displayBoard(board);
+    displayBoard(board);
 
-      console.log(playerScore)
+    prompt(`Current score: Player ${playerScore} | Computer ${compScore}`);
 
-      player(board);
-      if (someoneWon(board) || boardFull(board)) {
-        pointScorer(board);
-      }
 
-      if (playerScore === 5) break;
+    player(board);
+    winOrFull(board);
 
-      comp(board);
-      displayBoard(board);
-      if (someoneWon(board) || boardFull(board)) {
-        pointScorer(board);
-      }
+    if (playerScore === 5) break;
 
-      if (compScore === 5) break;
+    comp(board);
+    displayBoard(board);
+    winOrFull(board);
 
-    }
+    if (compScore === 5) break;
+
+  }
 
   displayBoard(board);
+  prompt(`Final score: Player ${playerScore} | Computer ${compScore}`);
 
-  if (someoneWon(board)) {
-    prompt(`Final score: Player ${playerScore} | Computer ${compScore}`);
-    prompt(`${detectWinner(board)} won!`);
+  if (compScore === 5) {
+    prompt(`Computer wins!`);
+  } else if (playerScore === 5) {
+    prompt('Player wins!');
   } else {
     prompt('It\'s a tie!');
   }

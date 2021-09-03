@@ -1,7 +1,7 @@
 const readline = require('readline-sync');
 const COMP_MARKER = 'O';
 const INITIAL_MARKER = ' ';
-const PLAYER_MARKER = 'X';
+const HUMAN_MARKER = 'X';
 const winCombos = [
   [1, 2, 3], [4, 5, 6], [7, 8, 9],
   [1, 4, 7], [2, 5, 8], [3, 6, 9],
@@ -10,7 +10,7 @@ const winCombos = [
 
 
 let compScore = 0;
-let playerScore = 0;
+let humanScore = 0;
 let restart = '';
 
 function prompt(msg) {
@@ -71,6 +71,11 @@ function findAtRiskSquare (line, board, marker) {
 function comp(board) {
   let square;
 
+  if (board[5] === INITIAL_MARKER) {
+    return board[5] = COMP_MARKER;
+  }
+
+
   for (let idx = 0; idx < winCombos.length; idx++) {
     let line = winCombos[idx];
     square = findAtRiskSquare(line, board, COMP_MARKER);
@@ -80,7 +85,7 @@ function comp(board) {
   if (!square) {
   for (let idx = 0; idx < winCombos.length; idx++) {
     let line = winCombos[idx];
-    square = findAtRiskSquare(line, board, PLAYER_MARKER);
+    square = findAtRiskSquare(line, board, HUMAN_MARKER);
     if (square) break;
    }
   }
@@ -110,7 +115,7 @@ function joinOr(arr, punctuation = ', ', conjunction = 'or') {
   }
 }
 
-function player(board) {
+function human(board) {
   let square;
 
   while (true) {
@@ -122,7 +127,7 @@ function player(board) {
     prompt("That's not a valid choice.");
   }
 
-  board[square] = PLAYER_MARKER;
+  board[square] = HUMAN_MARKER;
 }
 
 function someoneWon(board) {
@@ -134,9 +139,9 @@ function detectWinner(board) {
     let [ sq1, sq2, sq3 ] = winCombos[line];
 
     if (
-      board[sq1] === PLAYER_MARKER &&
-        board[sq2] === PLAYER_MARKER &&
-        board[sq3] === PLAYER_MARKER
+      board[sq1] === HUMAN_MARKER &&
+        board[sq2] === HUMAN_MARKER &&
+        board[sq3] === HUMAN_MARKER
     ) {
       return 'Player';
     } else if (
@@ -151,12 +156,32 @@ function detectWinner(board) {
   return null;
 }
 
+function alternatePlayer(player) {
+  if (player === 'human') {
+    return 'comp';
+  } else {
+    return 'human';
+  }
+}
+
+function chooseSquare(board, currentPlayer) {
+  if (currentPlayer === 'human') {
+    return human(board);
+  } else {
+    return comp(board);
+  }
+}
+
 function pointScorer(board) {
-  if (detectWinner(board) === 'Player') {
-    playerScore += 1;
-    clearBoard(board);
+  if (detectWinner(board) === 'human') {
+    humanScore += 1;
   } else {
     compScore += 1;
+  }
+  prompt(`Looks like ${detectWinner(board)} won this round, ready for the next round? yes or yes?`)
+  let answer = readline.question().toLowerCase();
+
+  if (answer === 'yes') {
     clearBoard(board);
   }
 }
@@ -165,7 +190,12 @@ function winOrFull(board) {
   if (someoneWon(board)) {
     pointScorer(board);
   } else if (boardFull(board)) {
+    prompt("Looks like the board is full, ready for the next round? y/n")
+    let answer = readline.question().toLowerCase();
+
+    if (answer === 'y') {
     clearBoard(board);
+    }
   }
 }
 
@@ -174,33 +204,46 @@ while (true) {
 
   prompt('Welcome player to the riveting game of TicTacToe!');
 
+  prompt("Would you like to go first? y/n")
+
+  let currentPlayer = readline.question().toLowerCase()[0];
+
+/*  while ((!currentPlayer.includes('y')) || (!currentPlayer.includes('n'))) {
+    prompt("That's not a valid choice");
+    currentPlayer = readline.question().toLowerCase()[0];
+  }*/
+
+  switch (currentPlayer) {
+    case 'y':
+      currentPlayer = human;
+      break;
+    case 'n':
+      currentPlayer = comp;
+      break;
+  }
+
   while (true) {
 
     displayBoard(board);
 
-    prompt(`Current score: Player ${playerScore} | Computer ${compScore}`);
+    prompt(`Current score: Human ${humanScore} | Computer ${compScore}`);
 
-
-    player(board);
+    chooseSquare(board, currentPlayer);
+    currentPlayer = alternatePlayer(currentPlayer);
     winOrFull(board);
 
-    if (playerScore === 5) break;
-
-    comp(board);
-    displayBoard(board);
-    winOrFull(board);
+    if (humanScore === 5) break;
 
     if (compScore === 5) break;
-
   }
 
   displayBoard(board);
-  prompt(`Final score: Player ${playerScore} | Computer ${compScore}`);
+  prompt(`Final score: Human ${humanScore} | Computer ${compScore}`);
 
   if (compScore === 5) {
     prompt(`Computer wins!`);
   } else if (playerScore === 5) {
-    prompt('Player wins!');
+    prompt('Human wins!');
   } else {
     prompt('It\'s a tie!');
   }

@@ -167,7 +167,7 @@ function alternatePlayer(player) {
 function chooseSquare(board, currentPlayer) {
   if (currentPlayer === 'human') {
     return human(board);
-  } else {
+  } else if (currentPlayer === 'comp') {
     return comp(board);
   }
 }

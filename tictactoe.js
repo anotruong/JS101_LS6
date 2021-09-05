@@ -143,13 +143,13 @@ function detectWinner(board) {
         board[sq2] === HUMAN_MARKER &&
         board[sq3] === HUMAN_MARKER
     ) {
-      return 'Player';
+      return 'human';
     } else if (
       board[sq1] === COMP_MARKER &&
         board[sq2] === COMP_MARKER &&
         board[sq3] === COMP_MARKER
     ) {
-      return 'Computer';
+      return 'comp';
     }
   }
 
@@ -204,21 +204,20 @@ while (true) {
 
   prompt('Welcome player to the riveting game of TicTacToe!');
 
-  prompt("Would you like to go first? y/n")
-
+  prompt("Would you like to go first? y/n");
   let currentPlayer = readline.question().toLowerCase()[0];
 
-/*  while ((!currentPlayer.includes('y')) || (!currentPlayer.includes('n'))) {
+  while (!((currentPlayer.includes('y')) || (currentPlayer.includes('n')))) {
     prompt("That's not a valid choice");
     currentPlayer = readline.question().toLowerCase()[0];
-  }*/
+  }
 
   switch (currentPlayer) {
     case 'y':
-      currentPlayer = human;
+      currentPlayer = 'human';
       break;
     case 'n':
-      currentPlayer = comp;
+      currentPlayer = 'comp';
       break;
   }
 
@@ -248,8 +247,14 @@ while (true) {
     prompt('It\'s a tie!');
   }
 
-  prompt(`Would you like to play again? y/n`);
+  prompt(`Would you like to play again or exit the game? \n y/n`);
   let answer = readline.question().toLowerCase()[0];
+
+   while (!((answer.includes('y')) || (answer.includes('n')))) {
+    prompt("That's not a valid choice");
+    answer = readline.question().toLowerCase()[0];
+  }
+
   if (answer !== 'y') break;
 }
 

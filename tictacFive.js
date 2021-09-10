@@ -24,6 +24,7 @@ function prompt(msg) {
   console.log('=>', msg);
 }
 
+//needs to refractor this function because ESLINT says there are too many lines.
 function displayBoard(board) {
   console.clear();
   console.log('  1     2     3     4     5');
@@ -80,6 +81,7 @@ function scoreBoard() {
 
 //Players functions
 
+//If the middle spaces are empty, comp should mark for them first.
 /*let middleSpaces = (board) => {
   let importantSpaces = String(Math.floor(Math.random() * (19 - 7 + 1) + 7));
     if (board[importantSpaces] === INITIAL_MARKER) {
@@ -90,6 +92,7 @@ function scoreBoard() {
 }
 */
 
+//Need help refactoring because ESLINT says it's too long.
 function comp(board) {
   let square;
 
@@ -150,6 +153,7 @@ function chooseSquare(board, currentPlayer) {
   return null;
 }
 
+//For some reason, detect winner does not trigger with certain diagonal arrays in const WinCombos
 function detectWinner(board) {
   for (let line = 0; line < winCombos.length; line++) {
     let [ sq1, sq2, sq3, sq4 ] = winCombos[line];
@@ -271,9 +275,9 @@ while (true) {
 
   do {
 
-  displayBoard(board);
+    displayBoard(board);
 
-  scoreBoard();
+    scoreBoard();
 
 
     prompt('You are X and I am O');

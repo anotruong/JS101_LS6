@@ -257,20 +257,10 @@ while (true) {
     currentPlayer = readline.question().toLowerCase()[0];
   }
 
-  switch (currentPlayer) {
-    case 'y':
-      currentPlayer = human;
-      break;
-    case 'n':
-      currentPlayer = comp;
-      break;
-    case 'r':
-      if (random() === 0) {
-        currentPlayer = comp;
-      } else {
-        currentPlayer = human;
-      }
-      break;
+  if (currentPlayer === 'r') {
+    currentPlayer = (random() === 0) ? 'human' : 'comp';
+  } else {
+    currentPlayer = (currentPlayer === 'y') ? 'human' : 'comp';
   }
 
   do {
@@ -278,7 +268,6 @@ while (true) {
     displayBoard(board);
 
     scoreBoard();
-
 
     prompt('You are X and I am O');
     chooseSquare(board, currentPlayer);

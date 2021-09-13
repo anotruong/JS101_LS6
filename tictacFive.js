@@ -21,6 +21,7 @@ const YES_NO = ['y', 'yes', 'n', 'no', 'r', 'random'];
 
 let compScore = 0;
 let humanScore = 0;
+let square; //for function comp(board);
 
 function prompt(msg) {
   console.log('=>', msg);
@@ -85,15 +86,13 @@ function scoreBoard() {
 function comp(board) {
   for (let idx = 0; idx < WIN_COMBOS.length; idx++) {
     let line = WIN_COMBOS[idx];
-    let square;
     let square1 = findAtRiskSquare(line, board, COMP_MARKER);
     let square2 = findAtRiskSquare(line, board, HUMAN_MARKER);
 
     if (!square1) {
       if (!square2) {
-	let randomIdx = Math.floor(Math.random() * emptySquares(board).length);
+        let randomIdx = Math.floor(Math.random() * emptySquares(board).length);
         square = emptySquares(board)[randomIdx];
-        break;
       } else {
         board[square2] = COMP_MARKER;
         break;
@@ -105,31 +104,6 @@ function comp(board) {
   }
   board[square] = COMP_MARKER;
 }
-
-/*function comp(board) {
-  let square;
-
-  for (let idx = 0; idx < winCombos.length; idx++) {
-    let line = winCombos[idx];
-    square = findAtRiskSquare(line, board, COMP_MARKER);
-    if (square) break;
-  }
-
-  if (!square) {
-    for (let idx = 0; idx < WIN_COMBOS.length; idx++) {
-      let line = winCombos[idx];
-      square = findAtRiskSquare(line, board, HUMAN_MARKER);
-      if (square) break;
-    }
-  }
-
-  if (!square) {
-    let randomIdx = Math.floor(Math.random() * emptySquares(board).length);
-    square = emptySquares(board)[randomIdx];
-  }
-
-  board[square] = COMP_MARKER;
-}*/
 
 function human(board) {
   let square;
@@ -147,7 +121,7 @@ function human(board) {
   return null;
 }
 
-//Game Functions
+//Gameplay
 
 function alternatePlayer(player) {
   if (player === 'human') {
@@ -172,17 +146,13 @@ function detectWinner(board) {
   for (let line = 0; line < WIN_COMBOS.length; line++) {
     let [ sq1, sq2, sq3, sq4 ] = WIN_COMBOS[line];
     if (
-      board[sq1] === HUMAN_MARKER &&
-         board[sq2] === HUMAN_MARKER &&
-            board[sq3] === HUMAN_MARKER &&
-            board[sq4] === HUMAN_MARKER
+      board[sq1] === HUMAN_MARKER && board[sq2] === HUMAN_MARKER &&
+      board[sq3] === HUMAN_MARKER &&  board[sq4] === HUMAN_MARKER
     ) {
       return 'human';
     } else if (
-      board[sq1] === COMP_MARKER &&
-            board[sq2] === COMP_MARKER &&
-            board[sq3] === COMP_MARKER &&
-            board[sq4] === COMP_MARKER
+      board[sq1] === COMP_MARKER && board[sq2] === COMP_MARKER &&
+      board[sq3] === COMP_MARKER && board[sq4] === COMP_MARKER
     ) {
       return 'comp';
     }

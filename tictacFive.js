@@ -103,6 +103,7 @@ function comp(board) {
       break;
     }
   }
+  board[square] = COMP_MARKER;
 }
 
 /*function comp(board) {

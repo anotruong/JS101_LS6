@@ -1,7 +1,6 @@
 //Game play//
 const readline = require('readline-sync');
-const EMPTY_DISPLAY = '            ';
-const FIFTY_TWO_CARDS = [
+const CARD_DECK = [
   ['C', 'A'], ['D', 'A'], ['H', 'A'], ['S', 'A'],
   ['C', '2'], ['D', '2'], ['H', '2'], ['S', '2'],
   ['C', '3'], ['D', '3'], ['H', '3'], ['S', '3'],
@@ -16,37 +15,45 @@ const FIFTY_TWO_CARDS = [
   ['C', 'Q'], ['D', 'Q'], ['H', 'Q'], ['S', 'Q'],
   ['C', 'K'], ['D', 'K'], ['H', 'K'], ['S', 'K']
 ];
+const EMPTY_DISPLAY = '            ';
+const GAME_BORDER = '|--------------|--------------|';
 const HIT_STAY = ['hit', 'stay'];
+const MAX_POINTS = 5;
 const MAX_SCORE = 21;
 const NO_YES = ['yes', 'no'];
 
 let dealersHand = [];
-let hiddenScore = 0;
+let dealersPoints = 0;
+let hiddenHand = 0;
 let playersHand = [];
+let playersPoints = 0;
 
 //DISPLAY BOARD INFO//
 
 function displayBoard(board) {
   console.clear();
 
-  console.log('|              |              |');
-//  console.log(`|  PLAYER: ${sumOfHand(playersHand).length}  |  DEALER: ${kerning(hiddenScore)}  |`);
-  console.log(`|  PLAYER: ${kerning(sumOfHand(playersHand))}  |  DEALER: ${kerning(hiddenScore)}  |`);
-  console.log('|--------------|--------------|');
+  console.log('');
+  console.log('|______B L A C K J A C K______|');
+  console.log('|                             |');
+  console.log(`|  PLAYER: ${kerning(playersPoints)}  |  DEALER: ${kerning(dealersPoints)}  |`);
+  console.log('|  _________   |  _________   |');
+  console.log(`|      ${kerning(sumOfHand(playersHand))}      |      ${kerning(hiddenHand)}      |`);
+  console.log(GAME_BORDER);
   console.log(`| ${board['0']} | ${board['1']} |`);
   console.log(`| ${board['2']} | ${board['3']} |`);
   console.log(`| ${board['4']} | ${board['5']} |`);
   console.log(`| ${board['6']} | ${board['7']} |`);
   console.log(`| ${board['8']} | ${board['9']} |`);
   console.log(`| ${board['10']} | ${board['11']} |`);
-  console.log('|--------------|--------------|');
+  console.log(GAME_BORDER);
 }
 
 function kerning(score) {
   if (String(score).length === 2) {
     return `${score}`;
   } else {
-   return score + ' ';
+    return score + ' ';
   }
 }
 
@@ -56,10 +63,6 @@ function displayCard(subArr) {
   } else {
     return '[  ' + subArr[0] + ',  ' + subArr[1] + '  ] ';
   }
-}
-
-function displayHand(hand) {
-  console.log(hand);
 }
 
 function initializeBoard() {
@@ -79,11 +82,14 @@ function prompt(msg) {
 //GAMEPLAY FUNCTIONS//
 
 function busted() {
-  if (sumOfHand(playersHand) >= MAX_SCORE) {
-      return true;
-    } else if (sumOfHand(dealersHand) >= MAX_SCORE) {
-      return true;
-    }
+  let winner = '';
+
+  if (sumOfHand(playersHand) > MAX_SCORE) {
+    winner = 'Dealer';
+  } else if (sumOfHand(dealersHand) > MAX_SCORE) {
+    winner = 'Player';
+  }
+  return winner;
 }
 
 function dealersHiddenCard(ele) {
@@ -96,6 +102,7 @@ function dealersHiddenCard(ele) {
   } else {
     sum += Number(ele);
   }
+
   return sum;
 }
 
@@ -107,57 +114,88 @@ function enterToContinue() {
   while (userInput === false) {
     prompt("Meep, something went wrong. You can press 'Enter' or any key to continue");
     userInput = readline.question().toLowerCase();
-  };
+  }
 }
 
-function sumOfHand(player) {
-  let sum = 0;
+function instantWin() {
+  return sumOfHand(playersHand) === MAX_SCORE;
+}
 
-  player.map(num => num[1]).forEach(ele => {
-    if (['J', 'Q', 'K']. includes(ele)) {
-      sum += 10;
-    } else if (ele === 'A') {
+function shuffle(CARD_DECK) {
+  for (let idx = CARD_DECK.length - 1; idx > 0; idx--) {
+    let secIdx = Math.floor(Math.random() * (idx + 1)); // 0 to index
+    [CARD_DECK[idx], CARD_DECK[secIdx]] = [CARD_DECK[secIdx], CARD_DECK[idx]];
+  }
+  return CARD_DECK;
+}
+
+function sumOfHand(cards) {
+  let values = cards.map(card => card[1]);
+
+  let sum = 0;
+  values.forEach(value => {
+    if (value === "A") {
       sum += 11;
+    } else if (['J', 'Q', 'K'].includes(value)) {
+      sum += 10;
     } else {
-      sum += Number(ele);
+      sum += Number(value);
     }
   });
 
-  player.filter(value => value === 'A').forEach(_ => {
-    if (sum > MAX_SCORE) sum -= 10;
+  values.filter(value => value === "A").forEach(_ => {
+    if (sum > 21) sum -= 10;
   });
 
   return sum;
 }
 
-function shuffle(FIFTY_TWO_CARDS) {
-  for (let index = FIFTY_TWO_CARDS.length - 1; index > 0; index--) {
-    let otherIndex = Math.floor(Math.random() * (index + 1)); // 0 to index
-    [FIFTY_TWO_CARDS[index], FIFTY_TWO_CARDS[otherIndex]] = [FIFTY_TWO_CARDS[otherIndex], FIFTY_TWO_CARDS[index]]; // swap elements
-  }
-  return FIFTY_TWO_CARDS;
-}
-
-
 //Create a function that only returns the result of the game
 //calculating the result.
 
-function whoWon() {
-  if (sumOfHand(dealersHand) < sumOfHand(playersHand) <= MAX_SCORE) {
-    prompt('Player Wins!');
-  } else if (sumOfHand(playerHand) < sumOfHand(dealersHand)<=  MAX_SCORE) {
-    prompt('Dealer Wins!');
+function calculateRound() {
+  let dealersTotal = sumOfHand(dealersHand);
+  let playersTotal = sumOfHand(playersHand);
+  let winner;
+
+  if (!busted()) {
+    if ((dealersTotal < playersTotal) || (playersTotal === MAX_SCORE)) {
+      winner = 'Player';
+    } else if ((playersTotal < dealersTotal) || (dealersTotal === MAX_SCORE)) {
+      winner = 'Dealer';
+    } else if (playersTotal === dealersTotal) {
+      winner = 'No one';
+    }
+  } else {
+    winner = busted();
   }
 
-  return null;
+  return winner;
 }
 
-//Create a function that only handles displaying the result.
-//displays the result
+function calculateOverallWinner() {
+  let winner = '';
 
-function displayWinner() {
+  if (dealersPoints < playersPoints) {
+    winner = 'Player';
+  } else if (dealersPoints > playersPoints) {
+    winner = 'Dealer';
+  }
 
+  return winner;
 }
+
+function displayRoundWinner() {
+  prompt(`${calculateRound()} gets a point for this round.`);
+}
+
+function displayOverallWinner() {
+  prompt(`${calculateOverallWinner()} won!\n`);
+  prompt(`Woooooo, congratulations ${calculateOverallWinner()}!!!!\n`);
+  prompt('*insert confetticannon.gif*');
+}
+
+let board = initializeBoard();
 
 //PLAYER FUNCTIONS//
 
@@ -168,39 +206,43 @@ function dealersTurn() {
 
   board['1'] = displayCard(dealersHand[0]);
 
- do {
+  do {
     displayBoard(board);
 
-    dealersHand.push(shuffle(FIFTY_TWO_CARDS)[0]);
+    dealersHand.push(shuffle(CARD_DECK)[0]);
 
     board[String(boardIdx)] = displayCard(dealersHand[arrIdx]);
 
     sum = sumOfHand(dealersHand);
 
+    if (busted()) break;
     arrIdx++;
     boardIdx += 2;
   } while (sum <= 17);
 
-  hiddenScore = sum;
+  hiddenHand = sum;
 
-  return hiddenScore;
+  return hiddenHand;
 }
 
 function firstTwoTurns() {
   //first drawl
-  playersHand.push(shuffle(FIFTY_TWO_CARDS)[0]);
+  playersHand.push(shuffle(CARD_DECK)[0]);
   board['0'] = displayCard(playersHand[0]);
 
-  dealersHand.push(shuffle(FIFTY_TWO_CARDS)[0]);
+  dealersHand.push(shuffle(CARD_DECK)[0]);
+  displayBoard(board);
+
+  enterToContinue();
 
   //second drawl
-  playersHand.push(shuffle(FIFTY_TWO_CARDS)[0]);
+  playersHand.push(shuffle(CARD_DECK)[0]);
   board['2'] = displayCard(playersHand[1]);
 
-  dealersHand.push(shuffle(FIFTY_TWO_CARDS)[0]);
+  dealersHand.push(shuffle(CARD_DECK)[0]);
   board['3'] = displayCard(dealersHand[1]);
 
-  hiddenScore = sumOfHand(dealersHand) - dealersHiddenCard(dealersHand[0][1]);
+  hiddenHand = sumOfHand(dealersHand) - dealersHiddenCard(dealersHand[0][1]);
 }
 
 function playersTurn() {
@@ -208,12 +250,11 @@ function playersTurn() {
   let handIdx = 2;
   let objIdx = 4;
 
- while (sum <= MAX_SCORE) {
+  while ((sum <= MAX_SCORE) && (!busted())) {
 
     displayBoard(board);
 
-    prompt("Do you want to hit or stay?");
-    let answer = readline.question().toLowerCase();
+    let answer = readline.question('=> Do you want to hit or stay?\n').toLowerCase();
 
     while (!HIT_STAY.includes(answer)) {
       prompt("That's not a valid answer. Do you want to hit or stay?");
@@ -222,16 +263,16 @@ function playersTurn() {
 
     if (answer !== 'hit') break;
 
-    playersHand.push(shuffle(FIFTY_TWO_CARDS)[0]);
+    playersHand.push(shuffle(CARD_DECK)[0]);
     board[String(objIdx)] = displayCard(playersHand[handIdx]);
+
     handIdx++;
     objIdx += 2;
-  };
-
-  return null;
+    sum = sumOfHand(playersHand);
+  }
 }
 
-let board = initializeBoard();
+//GAME LOOP//
 
 while (true) {
 
@@ -242,40 +283,75 @@ while (true) {
 
   enterToContinue();
 
-  do {
+  while (true) {
 
-    displayBoard(board);
+    do {
 
-    firstTwoTurns();
+      displayBoard(board);
 
-    playersTurn();
-    displayBoard(board);
+      firstTwoTurns();
 
-    if (busted()) break;
+      playersTurn();
+      displayBoard(board);
 
-    dealersTurn();
-    displayBoard(board);
+      if (busted()) break;
+      if (instantWin()) break;
 
-    if (busted()) break;
+      dealersTurn();
+      displayBoard(board);
 
-} while ((sumOfHand(playersHand) || sumOfHand(dealersHand)) <= MAX_SCORE);
+      break;
 
-whoWon();
+    } while ((sumOfHand(playersHand) || sumOfHand(dealersHand)) <= MAX_SCORE);
 
-prompt("Did you want to play again? Yes/No?");
-let restart = readline.question().toLowerCase();
+    if (calculateRound() === 'Player') {
+      playersPoints++;
+    } else if (calculateRound() === 'Dealer') {
+      dealersPoints++;
+    }
 
-while (!NO_YES.includes(restart)) {
-  prompt("That wasn't a valid answer. Yes or No?")
-  restart = readline.question().toLowerCase();
-}
+    displayRoundWinner();
 
-if (restart === 'no') break;
+    enterToContinue();
 
-dealersHand = [];
-playersHand = [];
+    if (dealersPoints === MAX_POINTS) break;
+    if (playersPoints === MAX_POINTS) break;
 
-console.clear();
+    dealersHand = [];
+    playersHand = [];
+
+    hiddenHand = 0;
+
+    board = initializeBoard();
+
+    console.clear();
+
+  } //while ((dealersPoints) || (playersPoints) < MAX_POINTS);
+
+  displayBoard(board);
+  displayOverallWinner();
+
+  enterToContinue();
+  displayBoard(board);
+
+  prompt("Did you want to play again? Yes/No?");
+  let restart = readline.question().toLowerCase();
+
+  while (!NO_YES.includes(restart)) {
+    prompt("That wasn't a valid answer. Yes or No?");
+    restart = readline.question().toLowerCase();
+  }
+
+  if (restart !== 'yes') break;
+
+  dealersHand = [];
+  playersHand = [];
+
+  hiddenHand = 0;
+
+  board = initializeBoard();
+
+  console.clear();
 }
 
 prompt("Thanks for playing!");
